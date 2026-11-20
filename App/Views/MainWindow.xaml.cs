@@ -9,9 +9,8 @@ namespace PhotoOrganiser;
 
 public partial class MainWindow : Window
 {
-    private readonly Organiser organiser = new();
-    // The plan belongs to the current folders and scan scope. The active token tracks one operation at a time.
-    private Preview? preview;
+    private readonly PhotoController controller = new(new Organiser());
+    // Track the active operation so the view can coordinate progress, cancellation, and controls.
     private CancellationTokenSource? active;
     private string? logPath;
 
@@ -36,7 +35,7 @@ public partial class MainWindow : Window
         // Folder and checkbox events can fire while WPF is constructing named controls.
         if (Table is null)
             return;
-        preview = null;
+        controller.ClearPreview();
         Table.ItemsSource = null;
         SetStatus("Run a preview with the current settings.");
         UpdateButtons();
@@ -48,12 +47,12 @@ public partial class MainWindow : Window
         var source = SourceBox.Text;
         var destination = DestinationBox.Text;
         var includeSubfolders = IncludeSubfolders.IsChecked == true;
-        preview = null;
+        controller.ClearPreview();
         Table.ItemsSource = null;
-        await Run("Scanning folders…", (token, progress) => organiser.Scan(source, destination, token, progress, includeSubfolders),
+        await Run("Scanning folders…", (token, progress) => controller.BuildPreviewAsync(source, destination, includeSubfolders, token, progress),
             result =>
             {
-                preview = result;
+                controller.Review(result);
                 Table.ItemsSource = result.Entries;
                 var copy = result.Entries.Count(row => row.Action == "Copy");
                 var duplicate = result.Entries.Count(row => row.Action == "Duplicate");
@@ -68,19 +67,18 @@ public partial class MainWindow : Window
 
     private async Task Transfer(bool move)
     {
-        if (preview is not Preview plan)
+        if (!controller.CanTransfer)
             return;
         // Default to No so accepting the default button cannot authorize source removal.
-        if (move && MessageBox.Show(this,
+        bool confirmed = !move || MessageBox.Show(this,
             "Moving permanently removes original files from the source folder after their destination copies are verified. " +
             "Originals flagged as duplicates stay in place. Continue with Move photos?",
-            "Confirm move", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+            "Confirm move", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
+        if (!confirmed)
             return;
 
-        // Consume the reviewed plan so the next transfer requires a fresh preview.
-        preview = null;
         await Run("Checking destination…",
-            (token, progress) => move ? organiser.Move(plan, token, progress) : organiser.Copy(plan, token, progress),
+            (token, progress) => controller.TransferAsync(move, confirmed, token, progress),
             result =>
             {
                 logPath = result.LogPath;
@@ -90,7 +88,7 @@ public partial class MainWindow : Window
             });
     }
 
-    private async Task Run<T>(string initial, Func<CancellationToken, IProgress<OperationProgress>, T> work, Action<T> complete)
+    private async Task Run<T>(string initial, Func<CancellationToken, IProgress<OperationProgress>, Task<T>> work, Action<T> complete)
     {
         using var cancellation = new CancellationTokenSource();
         active = cancellation;
@@ -111,7 +109,7 @@ public partial class MainWindow : Window
 
         try
         {
-            var result = await Task.Run(() => work(cancellation.Token, progress));
+            var result = await work(cancellation.Token, progress);
             complete(result);
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
@@ -171,7 +169,7 @@ public partial class MainWindow : Window
         IncludeSubfolders.IsEnabled = idle;
         PreviewButton.IsEnabled = idle && !string.IsNullOrWhiteSpace(SourceBox.Text)
             && !string.IsNullOrWhiteSpace(DestinationBox.Text);
-        CopyButton.IsEnabled = MoveButton.IsEnabled = idle && preview?.Entries.Any(row => row.Action == "Copy") == true;
+        CopyButton.IsEnabled = MoveButton.IsEnabled = idle && controller.CanTransfer;
         CancelButton.IsEnabled = idle == false && active?.IsCancellationRequested == false;
         LogButton.IsEnabled = idle && logPath is not null;
     }

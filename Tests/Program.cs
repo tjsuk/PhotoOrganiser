@@ -168,6 +168,23 @@ try
     Check(cancelledMove.Cancelled && cancelledMove.Moved == 0 && File.Exists(changedToKeep),
         "cancelled move preserves the original");
 
+    var controller = new PhotoController(organiser);
+    var idleProgress = new InlineProgress(_ => { });
+    Throws<InvalidOperationException>(() => controller.TransferAsync(false, true, CancellationToken.None, idleProgress),
+        "controller requires a reviewed preview");
+    var reviewed = controller.BuildPreviewAsync(moveSource, moveDestination, false, CancellationToken.None,
+        idleProgress).GetAwaiter().GetResult();
+    controller.Review(reviewed);
+    Throws<InvalidOperationException>(() => controller.TransferAsync(true, false, CancellationToken.None, idleProgress),
+        "controller requires explicit move confirmation");
+    Check(controller.CanTransfer && File.Exists(changedToKeep), "unconfirmed move preserves the preview and original");
+    var controllerCopy = controller.TransferAsync(false, true, CancellationToken.None, idleProgress);
+    Check(!controller.CanTransfer && controllerCopy.GetAwaiter().GetResult().Copied == 1 &&
+        File.Exists(changedToKeep), "controller consumes the preview and dispatches copy");
+    controller.Review(reviewed);
+    controller.ClearPreview();
+    Check(!controller.CanTransfer, "controller clears a stale preview");
+
     CheckWindowResources();
     Console.WriteLine("All integration checks passed.");
 }

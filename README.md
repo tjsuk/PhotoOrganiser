@@ -54,6 +54,14 @@ The tests create and remove a dedicated scratch folder under your Windows tempor
 dotnet publish .\App\PhotoOrganiser.csproj -c Release -r win-x64 --self-contained false -o .\publish
 ```
 
+## Code structure
+
+- **`App/Models/`** — `Organiser`, `PhotoDates`, and `MoveSource` handle scanning, metadata, duplicate checks, file transfers, and logging.
+- **`App/Views/`** — `MainWindow.xaml` and its code-behind collect input, display the preview and progress, and show confirmation dialogs.
+- **`App/Controllers/`** — `PhotoController` owns the reviewed preview, requires confirmation for moves, and dispatches background work.
+
+`App.xaml` remains at the project root and starts `Views/MainWindow.xaml`. `App/Assets/` contains the application icon and header image.
+
 ## How it handles your photos
 
 - **Dates** — The app tries original EXIF and XMP capture dates first, then Windows Date Taken and other supported creation or digitization fields. It uses the recorded calendar month where a timestamp includes an offset. If metadata is missing or unreadable, the app uses the file's local modification time and falls back to creation time if the modification date is unusable. The preview identifies the field used.

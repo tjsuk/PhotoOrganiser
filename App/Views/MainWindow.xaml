@@ -1,7 +1,7 @@
 <Window x:Class="PhotoOrganiser.MainWindow"
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
- Title="Photo Organiser" Icon="Assets/PhotoOrganiser.ico" Width="1120" Height="680" MinWidth="730" MinHeight="460"
+ Title="Photo Organiser" Icon="/PhotoOrganiser;component/Assets/PhotoOrganiser.ico" Width="1120" Height="680" MinWidth="730" MinHeight="460"
  WindowStartupLocation="CenterScreen" Background="#F3F5F8" FontFamily="Segoe UI" FontSize="14">
  <!-- Shared spacing and alignment for input controls. -->
  <Window.Resources>
@@ -24,7 +24,7 @@
   </Grid.RowDefinitions>
   <DockPanel Margin="0,0,0,19">
    <Button x:Name="AboutButton" DockPanel.Dock="Right" Content="_About" Click="ShowAbout" VerticalAlignment="Center"/>
-   <Image x:Name="HeaderImage" DockPanel.Dock="Left" Source="Assets/PhotoOrganiser.png" Width="56" Height="56"
+   <Image x:Name="HeaderImage" DockPanel.Dock="Left" Source="/PhotoOrganiser;component/Assets/PhotoOrganiser.png" Width="56" Height="56"
           VerticalAlignment="Center" Margin="0,0,12,0"/>
    <StackPanel>
     <TextBlock Text="Photo Organiser" FontSize="30" FontWeight="SemiBold" Foreground="#17253A"/>
