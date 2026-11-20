@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Build a Windows desktop executable without an accompanying console window. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Version>1.0.0</Version>
+    <ApplicationIcon>Assets/PhotoOrganiser.ico</ApplicationIcon>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="Assets/PhotoOrganiser.ico"/>
+    <Resource Include="Assets/PhotoOrganiser.png"/>
+  </ItemGroup>
+</Project>

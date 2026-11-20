@@ -1,0 +1,98 @@
+<Window x:Class="PhotoOrganiser.MainWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="Photo Organiser" Icon="Assets/PhotoOrganiser.ico" Width="1120" Height="680" MinWidth="730" MinHeight="460"
+ WindowStartupLocation="CenterScreen" Background="#F3F5F8" FontFamily="Segoe UI" FontSize="14">
+ <!-- Shared spacing and alignment for input controls. -->
+ <Window.Resources>
+  <Style TargetType="Button">
+   <Setter Property="Padding" Value="16,7"/>
+   <Setter Property="Margin" Value="8,0,0,0"/>
+  </Style>
+  <Style TargetType="TextBox">
+   <Setter Property="Padding" Value="8,6"/>
+   <Setter Property="VerticalContentAlignment" Value="Center"/>
+  </Style>
+ </Window.Resources>
+ <Grid Margin="24">
+  <Grid.RowDefinitions>
+   <RowDefinition Height="Auto"/>
+   <RowDefinition Height="Auto"/>
+   <RowDefinition Height="Auto"/>
+   <RowDefinition Height="*"/>
+   <RowDefinition Height="Auto"/>
+  </Grid.RowDefinitions>
+  <DockPanel Margin="0,0,0,19">
+   <Button x:Name="AboutButton" DockPanel.Dock="Right" Content="_About" Click="ShowAbout" VerticalAlignment="Center"/>
+   <Image x:Name="HeaderImage" DockPanel.Dock="Left" Source="Assets/PhotoOrganiser.png" Width="56" Height="56"
+          VerticalAlignment="Center" Margin="0,0,12,0"/>
+   <StackPanel>
+    <TextBlock Text="Photo Organiser" FontSize="30" FontWeight="SemiBold" Foreground="#17253A"/>
+    <TextBlock Text="Preview photos, then copy or move them into year and month folders."
+               Foreground="#45566C" Margin="0,4,0,0" TextWrapping="Wrap"/>
+   </StackPanel>
+  </DockPanel>
+  <!-- Folder fields accept typed paths as well as picker selections. -->
+  <Grid Grid.Row="1" Margin="0,0,0,14">
+   <Grid.RowDefinitions>
+    <RowDefinition Height="Auto"/>
+    <RowDefinition Height="Auto"/>
+    <RowDefinition Height="Auto"/>
+   </Grid.RowDefinitions>
+   <Grid.ColumnDefinitions>
+    <ColumnDefinition Width="105"/>
+    <ColumnDefinition Width="*"/>
+    <ColumnDefinition Width="Auto"/>
+   </Grid.ColumnDefinitions>
+   <Label Content="_Source" Target="{Binding ElementName=SourceBox}" VerticalAlignment="Center"/>
+   <TextBox x:Name="SourceBox" Grid.Column="1" TextChanged="PreviewOptionsChanged"/>
+   <Button x:Name="SourceBrowse" Grid.Column="2" Content="Browse…" AutomationProperties.Name="Browse for source" Click="Browse"/>
+   <CheckBox x:Name="IncludeSubfolders" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,8,0,0"
+             Content="Include source su_bfolders" IsChecked="True"
+             Checked="PreviewOptionsChanged" Unchecked="PreviewOptionsChanged"/>
+   <Label Grid.Row="2" Content="_Destination" Target="{Binding ElementName=DestinationBox}" VerticalAlignment="Center"/>
+   <TextBox x:Name="DestinationBox" Grid.Row="2" Grid.Column="1" Margin="0,8,0,0" TextChanged="PreviewOptionsChanged"/>
+   <Button x:Name="DestinationBrowse" Grid.Row="2" Grid.Column="2" Margin="8,8,0,0" Content="Browse…"
+           AutomationProperties.Name="Browse for destination" Click="Browse"/>
+  </Grid>
+  <StackPanel Grid.Row="2" Margin="0,0,0,12">
+   <DockPanel>
+    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+     <Button x:Name="PreviewButton" Content="_Preview" Click="Scan"/>
+     <Button x:Name="CopyButton" Content="_Copy photos" Click="Copy" IsEnabled="False" FontWeight="SemiBold"
+             Background="#185CB6" Foreground="White" BorderBrush="#154B91"/>
+     <Button x:Name="MoveButton" Content="_Move photos" Click="Move" IsEnabled="False" FontWeight="SemiBold"
+             Background="#B32634" Foreground="White" BorderBrush="#8F202B"/>
+     <Button x:Name="CancelButton" Content="Cancel" Click="Cancel" IsEnabled="False"/>
+    </StackPanel>
+    <TextBlock x:Name="Status" VerticalAlignment="Center" TextWrapping="Wrap" Foreground="#243B56"
+               AutomationProperties.LiveSetting="Polite" Text="Choose your source and destination folders."/>
+   </DockPanel>
+   <!-- Show the active path and switch to a measured bar once the file count is known. -->
+   <StackPanel x:Name="ProgressPanel" Visibility="Collapsed" Margin="0,8,0,0">
+    <ProgressBar x:Name="OperationBar" Height="8" AutomationProperties.Name="Operation progress"/>
+    <TextBlock x:Name="CurrentFile" Margin="0,4,0,0" Foreground="#45566C"
+               TextTrimming="CharacterEllipsis" AutomationProperties.Name="Current file or folder"/>
+   </StackPanel>
+  </StackPanel>
+  <!-- Bind preview rows to a sortable, read-only table with virtualized rows. -->
+  <DataGrid x:Name="Table" Grid.Row="3" AutoGenerateColumns="False" IsReadOnly="True"
+            CanUserAddRows="False" EnableRowVirtualization="True" HeadersVisibility="Column"
+            Background="White" AlternatingRowBackground="#F7F9FC" AutomationProperties.Name="Photo preview">
+   <DataGrid.Columns>
+    <DataGridTextColumn Header="Action" Binding="{Binding Action}" Width="85"/>
+    <DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="2*" MinWidth="115"/>
+    <DataGridTextColumn Header="Date used" Binding="{Binding Date}" Width="148"/>
+    <DataGridTextColumn Header="Date source" Binding="{Binding DateSource}" Width="155"/>
+    <DataGridTextColumn Header="Destination" Binding="{Binding Destination}" Width="2*" MinWidth="115"/>
+    <DataGridTextColumn Header="Details" Binding="{Binding Note}" Width="*" MinWidth="90"/>
+   </DataGrid.Columns>
+  </DataGrid>
+  <!-- The log button becomes available after a copy run produces a log. -->
+  <DockPanel Grid.Row="4" Margin="0,10,0,0">
+   <Button x:Name="LogButton" DockPanel.Dock="Right" Content="Show run log" IsEnabled="False" Click="OpenLog"/>
+   <TextBlock VerticalAlignment="Center" Foreground="#45566C" TextWrapping="Wrap"
+              Text="Identical files are skipped. Different photos with the same name get a numbered suffix."/>
+  </DockPanel>
+ </Grid>
+</Window>
